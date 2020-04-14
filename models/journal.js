@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const url = process.env.MONGO_URI
+const url = process.env.MONGODB_URI
 
 mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
 	.then(() => {
@@ -11,7 +11,7 @@ mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
 	})
 
 const journalSchema = new mongoose.Schema({
-	date: Date,
+	date: String,
 	todos: [],
 	reflection: String,
 	book_summaries: [],
