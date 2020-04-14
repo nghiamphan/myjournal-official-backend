@@ -11,9 +11,15 @@ mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
 	})
 
 const journalSchema = new mongoose.Schema({
-	date: String,
+	date: {
+		type: String,
+		required: true
+	},
 	todos: [],
-	reflection: String,
+	reflection: {
+		type: String,
+		required: true
+	},
 	book_summaries: [],
 	words_of_today: []
 })

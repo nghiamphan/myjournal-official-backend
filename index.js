@@ -35,25 +35,23 @@ app.get('/api/journals/:id', async (request, response, next) => {
 	}
 })
 
-app.post('/api/journals', async (request, response) => {
-	const body = request.body
+app.post('/api/journals', async (request, response, next) => {
+	try {
+		const body = request.body
 
-	if (!body.date || !body.reflection) {
-		return response.status(400).json({
-			error: 'content missing'
+		const journal = new Journal({
+			date: body.date,
+			todos: body.todos,
+			reflection: body.reflection,
+			book_summaries: body.book_summaries,
+			words_of_today: body.words_of_today
 		})
+
+		const savedJournal = await journal.save()
+		response.json(savedJournal)
+	} catch (error) {
+		next(error)
 	}
-
-	const journal = new Journal({
-		date: body.date,
-		todos: body.todos,
-		reflection: body.reflection,
-		book_summaries: body.book_summaries,
-		words_of_today: body.words_of_today
-	})
-
-	const savedJournal = await journal.save()
-	response.json(savedJournal)
 })
 
 app.put('/api/journals/:id', async (request, response, next) => {
@@ -96,6 +94,8 @@ const errorHandler = (error, request, response, next) => {
 	if (error.name === 'CastError') {
 		// For some reason, error.kind === undefined?
 		return response.status(400).send({ error: 'malformatted id' })
+	} else if (error.name === 'ValidationError') {
+		return response.status(400).json({ error: error.message })
 	}
 	next(error)
 }
