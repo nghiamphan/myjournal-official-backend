@@ -78,7 +78,7 @@ app.get('/api/journals', async (request, response) => {
 	response.json(journals)
 })
 
-app.get('/api/journals/:id', async (request, response) => {
+app.get('/api/journals/:id', async (request, response, next) => {
 	try {
 		const journal = await Journal.findById(request.params.id)
 		if (journal) {
@@ -87,7 +87,7 @@ app.get('/api/journals/:id', async (request, response) => {
 			response.status(404).end()
 		}
 	} catch (error) {
-		response.status(400).send({ error: 'malformatted id' })
+		next(error)
 	}
 })
 
@@ -123,6 +123,18 @@ const unknownEndpoint = (request, response) => {
 }
 
 app.use(unknownEndpoint)
+
+const errorHandler = (error, request, response, next) => {
+	console.error(error.message)
+
+	if (error.name === 'CastError') {
+		// For some reason, error.kind === undefined?
+		return response.status(400).send({ error: 'malformatted id' })
+	}
+	next(error)
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
