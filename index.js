@@ -78,9 +78,8 @@ app.get('/api/journals', async (request, response) => {
 	response.json(journals)
 })
 
-app.get('/api/journals/:id', (request, response) => {
-	const id = Number(request.params.id)
-	const journal = initialJournals.find(journal => journal.id === id)
+app.get('/api/journals/:id', async (request, response) => {
+	const journal = await Journal.findById(request.params.id)
 
 	if (journal) {
 		response.json(journal)
