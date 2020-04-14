@@ -1,7 +1,7 @@
 const express = require('express')
 const app = express()
 
-const initialJournals = [
+let initialJournals = [
 	{
 		id: 1,
 		date: '2020-03-23',
@@ -69,6 +69,12 @@ app.get('/api/journals/:id', (request, response) => {
 	} else {
 		response.status(404).end()
 	}
+})
+
+app.delete('/api/journals/:id', (request, response) => {
+	const id = Number(request.params.id)
+	initialJournals = initialJournals.filter(journal => journal.id !== id)
+	response.status(204).end()
 })
 
 const PORT = 3001
