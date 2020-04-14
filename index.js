@@ -73,8 +73,9 @@ let initialJournals = [
 	}
 ]
 
-app.get('/api/journals', (request, response) => {
-	response.json(initialJournals)
+app.get('/api/journals', async (request, response) => {
+	const journals = await Journal.find({})
+	response.json(journals)
 })
 
 app.get('/api/journals/:id', (request, response) => {
