@@ -88,14 +88,7 @@ app.get('/api/journals/:id', async (request, response) => {
 	}
 })
 
-const generateId = () => {
-	const maxId = initialJournals.length > 0
-		? Math.max(...initialJournals.map(n => n.id))
-		: 0
-	return maxId + 1
-}
-
-app.post('/api/journals', (request, response) => {
+app.post('/api/journals', async (request, response) => {
 	const body = request.body
 
 	if (!body.date || !body.reflection) {
@@ -104,18 +97,16 @@ app.post('/api/journals', (request, response) => {
 		})
 	}
 
-	const journal = {
-		id: generateId(),
+	const journal = new Journal({
 		date: body.date,
 		todos: body.todos,
 		reflection: body.reflection,
 		book_summaries: body.book_summaries,
 		words_of_today: body.words_of_today
-	}
+	})
 
-	initialJournals = initialJournals.concat(journal)
-
-	response.json(journal)
+	const savedJournal = await journal.save()
+	response.json(savedJournal)
 })
 
 app.delete('/api/journals/:id', (request, response) => {
