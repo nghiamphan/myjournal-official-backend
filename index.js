@@ -112,10 +112,13 @@ app.post('/api/journals', async (request, response) => {
 	response.json(savedJournal)
 })
 
-app.delete('/api/journals/:id', (request, response) => {
-	const id = Number(request.params.id)
-	initialJournals = initialJournals.filter(journal => journal.id !== id)
-	response.status(204).end()
+app.delete('/api/journals/:id', async (request, response, next) => {
+	try {
+		await Journal.findByIdAndRemove(request.params.id)
+		response.status(204).end()
+	} catch (error) {
+		next(error)
+	}
 })
 
 const unknownEndpoint = (request, response) => {
