@@ -1,0 +1,28 @@
+PUT http://localhost:3001/api/journals/5e9641cf8ec5fe66dc913fe7
+Content-Type: application/json
+
+{
+	"date": "2020-04-12",
+	"todos": [
+		{
+			"id": 1,
+			"task": "Learn React for two hours",
+			"done": true
+		},
+		{
+			"id": 2,
+			"task": "Practice skating for one hour",
+			"done": true
+		}
+	],
+	"reflection": "Updated test",
+	"book_summaries": [
+		{
+			"id": 1,
+			"title": "Catch-22",
+			"chapter": "The Texan",
+			"content": "This chapter is very interesting. This chapter is very interesting. This chapter is very interesting. This chapter is very interesting. This chapter is very interesting."
+		}
+	],
+	"words_of_today": []
+}

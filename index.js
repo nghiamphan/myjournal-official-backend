@@ -17,62 +17,6 @@ const requestLogger = (request, response, next) => {
 
 app.use(requestLogger)
 
-let initialJournals = [
-	{
-		id: 1,
-		date: '2020-03-23',
-		todos: [
-			{
-				id: 1,
-				task: 'Learn React for two hours',
-				done: true
-			},
-			{
-				id: 2,
-				task: 'Learn to skate for one hour',
-				done: false
-			}
-		],
-		reflection: 'Today is good.',
-		book_summaries: [
-			{
-				id: 1,
-				title: 'Catch-22',
-				chapter: 'The Texan',
-				summary: 'This chapter is very interesting'
-			}
-		],
-		words_of_today: [
-			{
-				id: 1,
-				word: 'Epiphany',
-				definition: 'A suddent moment of insight or realization.'
-			}
-		]
-	},
-	{
-		id: 2,
-		date: '2020-03-24',
-		todos: [
-			{
-				id: 1,
-				task: 'Mediatation for 5 minutes',
-				done: true
-			}
-		],
-		reflection: 'Today is fantastic.',
-		book_summaries: [
-			{
-				id: 1,
-				title: 'Selfish Gene',
-				chapter: '12',
-				summary: 'This chapter is very insightful.'
-			}
-		],
-		words_of_today: []
-	}
-]
-
 app.get('/api/journals', async (request, response) => {
 	const journals = await Journal.find({})
 	response.json(journals)
@@ -110,6 +54,25 @@ app.post('/api/journals', async (request, response) => {
 
 	const savedJournal = await journal.save()
 	response.json(savedJournal)
+})
+
+app.put('/api/journals/:id', async (request, response, next) => {
+	try {
+		const body = request.body
+
+		const journal = {
+			date: body.date,
+			todos: body.todos,
+			reflection: body.reflection,
+			book_summaries: body.book_summaries,
+			words_of_today: body.words_of_today
+		}
+
+		const updatedJournal = await Journal.findByIdAndUpdate(request.params.id, journal, { new: true })
+		response.json(updatedJournal)
+	} catch (error) {
+		next(error)
+	}
 })
 
 app.delete('/api/journals/:id', async (request, response, next) => {
