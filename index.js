@@ -60,6 +60,17 @@ app.get('/api/journals', (request, response) => {
 	response.json(initialJournals)
 })
 
+app.get('/api/journals/:id', (request, response) => {
+	const id = Number(request.params.id)
+	const journal = initialJournals.find(journal => journal.id === id)
+
+	if (journal) {
+		response.json(journal)
+	} else {
+		response.status(404).end()
+	}
+})
+
 const PORT = 3001
 app.listen(PORT, () => {
 	console.log(`Server running on port ${PORT}`)
