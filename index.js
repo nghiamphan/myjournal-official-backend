@@ -79,12 +79,15 @@ app.get('/api/journals', async (request, response) => {
 })
 
 app.get('/api/journals/:id', async (request, response) => {
-	const journal = await Journal.findById(request.params.id)
-
-	if (journal) {
-		response.json(journal)
-	} else {
-		response.status(404).end()
+	try {
+		const journal = await Journal.findById(request.params.id)
+		if (journal) {
+			response.json(journal)
+		} else {
+			response.status(404).end()
+		}
+	} catch (error) {
+		response.status(400).send({ error: 'malformatted id' })
 	}
 })
 
