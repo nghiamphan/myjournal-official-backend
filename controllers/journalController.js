@@ -6,64 +6,48 @@ journalsRouter.get('/', async (request, response) => {
 	response.json(journals)
 })
 
-journalsRouter.get('/:id', async (request, response, next) => {
-	try {
-		const journal = await Journal.findById(request.params.id)
-		if (journal) {
-			response.json(journal)
-		} else {
-			response.status(404).end()
-		}
-	} catch (error) {
-		next(error)
+journalsRouter.get('/:id', async (request, response) => {
+	const journal = await Journal.findById(request.params.id)
+	if (journal) {
+		response.json(journal)
+	} else {
+		response.status(404).end()
 	}
 })
 
-journalsRouter.post('/', async (request, response, next) => {
-	try {
-		const body = request.body
+journalsRouter.post('/', async (request, response) => {
+	const body = request.body
 
-		const journal = new Journal({
-			date: body.date,
-			todos: body.todos,
-			reflection: body.reflection,
-			book_summaries: body.book_summaries,
-			words_of_today: body.words_of_today
-		})
+	const journal = new Journal({
+		date: body.date,
+		todos: body.todos,
+		reflection: body.reflection,
+		book_summaries: body.book_summaries,
+		words_of_today: body.words_of_today
+	})
 
-		const savedJournal = await journal.save()
-		response.json(savedJournal)
-	} catch (error) {
-		next(error)
-	}
+	const savedJournal = await journal.save()
+	response.json(savedJournal)
 })
 
-journalsRouter.put('/:id', async (request, response, next) => {
-	try {
-		const body = request.body
+journalsRouter.put('/:id', async (request, response) => {
+	const body = request.body
 
-		const journal = {
-			date: body.date,
-			todos: body.todos,
-			reflection: body.reflection,
-			book_summaries: body.book_summaries,
-			words_of_today: body.words_of_today
-		}
-
-		const updatedJournal = await Journal.findByIdAndUpdate(request.params.id, journal, { new: true })
-		response.json(updatedJournal)
-	} catch (error) {
-		next(error)
+	const journal = {
+		date: body.date,
+		todos: body.todos,
+		reflection: body.reflection,
+		book_summaries: body.book_summaries,
+		words_of_today: body.words_of_today
 	}
+
+	const updatedJournal = await Journal.findByIdAndUpdate(request.params.id, journal, { new: true })
+	response.json(updatedJournal)
 })
 
-journalsRouter.delete('/:id', async (request, response, next) => {
-	try {
-		await Journal.findByIdAndRemove(request.params.id)
-		response.status(204).end()
-	} catch (error) {
-		next(error)
-	}
+journalsRouter.delete('/:id', async (request, response) => {
+	await Journal.findByIdAndRemove(request.params.id)
+	response.status(204).end()
 })
 
 module.exports = journalsRouter
