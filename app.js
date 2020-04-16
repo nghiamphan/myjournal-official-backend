@@ -13,7 +13,8 @@ const mongoose = require('mongoose')
 logger.info('connecting to', config.MONGODB_URI)
 
 mongoose.connect(config.MONGODB_URI, {
-	useCreateIndex:true,
+	useCreateIndex: true,
+	useFindAndModify: false,
 	useNewUrlParser: true,
 	useUnifiedTopology: true
 })
