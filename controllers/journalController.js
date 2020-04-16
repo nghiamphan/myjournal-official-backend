@@ -18,17 +18,9 @@ journalsRouter.get('/:id', async (request, response) => {
 	}
 })
 
-const getTokenFrom = request => {
-	const authorization = request.get('authorization')
-	if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-		return authorization.substring(7)
-	}
-	return null
-}
-
 journalsRouter.post('/', async (request, response) => {
 	const body = request.body
-	const token = getTokenFrom(request)
+	const token = request.token
 
 	const decodedToken = jwt.verify(token, process.env.SECRET)
 	if (!token || !decodedToken.id) {
@@ -54,7 +46,7 @@ journalsRouter.post('/', async (request, response) => {
 
 journalsRouter.put('/:id', async (request, response) => {
 	const body = request.body
-	const token = getTokenFrom(request)
+	const token = request.token
 
 	const decodedToken = jwt.verify(token, process.env.SECRET)
 	if (!token || !decodedToken.id) {
@@ -76,7 +68,7 @@ journalsRouter.put('/:id', async (request, response) => {
 })
 
 journalsRouter.delete('/:id', async (request, response) => {
-	const token = getTokenFrom(request)
+	const token = request.token
 
 	const decodedToken = jwt.verify(token, process.env.SECRET)
 	if (!token || !decodedToken.id) {
