@@ -1,4 +1,5 @@
 const journalsRouter = require('express').Router()
+const jwt = require('jsonwebtoken')
 const Journal = require('../models/journal')
 const User = require('../models/user')
 
@@ -17,10 +18,23 @@ journalsRouter.get('/:id', async (request, response) => {
 	}
 })
 
+const getTokenFrom = request => {
+	const authorization = request.get('authorization')
+	if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
+		return authorization.substring(7)
+	}
+	return null
+}
+
 journalsRouter.post('/', async (request, response) => {
 	const body = request.body
+	const token = getTokenFrom(request)
 
-	const user = await User.findById(body.user_id)
+	const decodedToken = jwt.verify(token, process.env.SECRET)
+	if (!token || !decodedToken.id) {
+		return response.status(401).json({ error: 'token missing or invalid' })
+	}
+	const user = await User.findById(decodedToken.id)
 
 	const journal = new Journal({
 		date: body.date,
