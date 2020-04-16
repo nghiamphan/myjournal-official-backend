@@ -19,7 +19,7 @@ journalsRouter.get('/:id', async (request, response) => {
 journalsRouter.post('/', async (request, response) => {
 	const body = request.body
 
-	const user = await User.findById(body.userId)
+	const user = await User.findById(body.user_id)
 
 	const journal = new Journal({
 		date: body.date,
@@ -27,7 +27,7 @@ journalsRouter.post('/', async (request, response) => {
 		reflection: body.reflection,
 		book_summaries: body.book_summaries,
 		words_of_today: body.words_of_today,
-		user: user._id
+		user_id: user._id
 	})
 
 	const savedJournal = await journal.save()

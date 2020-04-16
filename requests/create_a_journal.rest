@@ -25,5 +25,5 @@ Content-Type: application/json
 		}
 	],
 	"words_of_today": [],
-	"userId": "5e98524c11597145b0aaffe2"
+	"user_id": "5e98524c11597145b0aaffe2"
 }

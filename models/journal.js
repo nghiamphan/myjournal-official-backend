@@ -12,8 +12,9 @@ const journalSchema = new mongoose.Schema({
 	},
 	book_summaries: [],
 	words_of_today: [],
-	user: {
+	user_id: {
 		type: mongoose.Schema.Types.ObjectId,
+		required: true,
 		ref: 'User'
 	}
 })
