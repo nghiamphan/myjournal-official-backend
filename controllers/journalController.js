@@ -71,7 +71,7 @@ journalsRouter.put('/:id', async (request, response) => {
 		user_id: user._id
 	}
 
-	const updatedJournal = await Journal.findByIdAndUpdate(request.params.id, journal, { new: true })
+	const updatedJournal = await Journal.findByIdAndUpdate(request.params.id, journal, { new: true, runValidators: true })
 	response.json(updatedJournal)
 })
 
