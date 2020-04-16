@@ -1,4 +1,5 @@
 const Journal = require('../models/journal')
+const User = require('../models/user')
 
 const initialJournals = [
 	{
@@ -73,8 +74,14 @@ const journalsInDb = async () => {
 	return journals
 }
 
+const usersInDb = async () => {
+	const users = await User.find({})
+	return users
+}
+
 module.exports = {
 	initialJournals,
 	nonExistingId,
-	journalsInDb
+	journalsInDb,
+	usersInDb
 }
