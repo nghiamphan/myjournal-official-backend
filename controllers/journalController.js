@@ -54,13 +54,21 @@ journalsRouter.post('/', async (request, response) => {
 
 journalsRouter.put('/:id', async (request, response) => {
 	const body = request.body
+	const token = getTokenFrom(request)
+
+	const decodedToken = jwt.verify(token, process.env.SECRET)
+	if (!token || !decodedToken.id) {
+		return response.status(401).json({ error: 'token missing or invalid' })
+	}
+	const user = await User.findById(decodedToken.id)
 
 	const journal = {
 		date: body.date,
 		todos: body.todos,
 		reflection: body.reflection,
 		book_summaries: body.book_summaries,
-		words_of_today: body.words_of_today
+		words_of_today: body.words_of_today,
+		user_id: user._id
 	}
 
 	const updatedJournal = await Journal.findByIdAndUpdate(request.params.id, journal, { new: true })
