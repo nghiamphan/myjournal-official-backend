@@ -9,10 +9,18 @@ const User = require('../models/user')
 const api = supertest(app)
 
 beforeEach(async () => {
+	// Set up initial user database
+	await User.deleteMany({})
+
+	const user = new User(await helper.initializeUser())
+
+	const savedUser = await user.save()
+
+	// Set up initial journal database
 	await Journal.deleteMany({})
 
 	const journalObjects = helper.initialJournals
-		.map(journal => new Journal(journal))
+		.map(journal => new Journal({ ...journal, user_id: savedUser._id }))
 	const promiseArray = journalObjects.map(journal => journal.save())
 	await Promise.all(promiseArray)
 })
@@ -45,18 +53,20 @@ describe('when there is initially some journals saved', () => {
 		test('succeeds with a valid id', async () => {
 			const journalsAtStart = await helper.journalsInDb()
 
-			const journalToView = journalsAtStart[0]
+			let journalToView = journalsAtStart[0]
 
 			const response = await api
 				.get(`/api/journals/${journalToView.id}`)
 				.expect(200)
 				.expect('Content-Type', /application\/json/)
 
-			expect(response.body).toEqual(journalToView.toJSON())
+			journalToView = { ...journalToView.toJSON(), user_id: journalToView.user_id.toString() }
+			expect(response.body).toEqual(journalToView)
 		})
 
 		test('fails with statuscode 404 if note does not exist', async () => {
-			const validNonexistingId = await helper.nonExistingId()
+			const users = await helper.usersInDb()
+			const validNonexistingId = await helper.nonExistingId(users[0])
 
 			await api
 				.get(`/api/journals/${validNonexistingId}`)
@@ -82,9 +92,16 @@ describe('when there is initially some journals saved', () => {
 				words_of_today: []
 			}
 
+			// Login to get token
+			const response = await api.post('/api/login').send({
+				username: (await helper.initializeUser()).username,
+				password: (await helper.initializeUser()).password
+			})
+
 			await api
 				.post('/api/journals')
 				.send(newJournal)
+				.set({ Authorization: 'bearer ' + response.body.token })
 				.expect(200)
 				.expect('Content-Type', /application\/json/)
 
@@ -98,7 +115,7 @@ describe('when there is initially some journals saved', () => {
 			expect(reflections).toContain('add a new journal test')
 		})
 
-		test('fails with status code 400 if data invaild', async () => {
+		test('fails with status code 400 if data is invalid', async () => {
 			const newJournal = {
 				date: '2020-01-01',
 				todos: [],
@@ -106,10 +123,35 @@ describe('when there is initially some journals saved', () => {
 				words_of_today: []
 			}
 
+			// Login to get token
+			const response = await api.post('/api/login').send({
+				username: (await helper.initializeUser()).username,
+				password: (await helper.initializeUser()).password
+			})
+
 			await api
 				.post('/api/journals')
 				.send(newJournal)
+				.set({ Authorization: 'bearer ' + response.body.token })
 				.expect(400)
+
+			const journalsAtEnd = await helper.journalsInDb()
+			expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
+		})
+
+		test('fails with status code 401 if token is invalid', async () => {
+			const newJournal = {
+				date: '2020-01-01',
+				todos: [],
+				reflection: 'add a new journal test',
+				book_summaries: [],
+				words_of_today: []
+			}
+
+			await api
+				.post('/api/journals')
+				.send(newJournal)
+				.expect(401)
 
 			const journalsAtEnd = await helper.journalsInDb()
 			expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
@@ -121,8 +163,15 @@ describe('when there is initially some journals saved', () => {
 			const journalsAtStart = await helper.journalsInDb()
 			const journalToDelete = journalsAtStart[0]
 
+			// Login to get token
+			const response = await api.post('/api/login').send({
+				username: (await helper.initializeUser()).username,
+				password: (await helper.initializeUser()).password
+			})
+
 			await api
 				.delete(`/api/journals/${journalToDelete.id}`)
+				.set({ Authorization: 'bearer ' + response.body.token })
 				.expect(204)
 
 			const journalAtEnd = await helper.journalsInDb()
@@ -133,6 +182,15 @@ describe('when there is initially some journals saved', () => {
 
 			const reflections = journalAtEnd.map(r => r.reflection)
 			expect(reflections).not.toContain('Today is good.')
+		})
+
+		test('fails with status code 401 if token is invalid', async () => {
+			const journalsAtStart = await helper.journalsInDb()
+			const journalToDelete = journalsAtStart[0]
+
+			await api
+				.delete(`/api/journals/${journalToDelete.id}`)
+				.expect(401)
 		})
 	})
 })

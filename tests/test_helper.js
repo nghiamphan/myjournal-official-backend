@@ -1,3 +1,4 @@
+const bcrypt = require('bcrypt')
 const Journal = require('../models/journal')
 const User = require('../models/user')
 
@@ -55,13 +56,24 @@ const initialJournals = [
 	}
 ]
 
-const nonExistingId = async () => {
+const initializeUser = async () => {
+	const passwordHash = await bcrypt.hash('root', 10)
+	return {
+		username: 'root',
+		name: 'Root',
+		password: 'root', // add password here for testing purpose only
+		passwordHash
+	}
+}
+
+const nonExistingId = async user => {
 	const journal = new Journal({
 		date: '01/01/2020',
 		todos: [],
 		reflection: 'willremovethissoon',
 		book_summaries: [],
-		words_of_today: []
+		words_of_today: [],
+		user_id: user._id
 	})
 	await journal.save()
 	await journal.remove()
@@ -81,6 +93,7 @@ const usersInDb = async () => {
 
 module.exports = {
 	initialJournals,
+	initializeUser,
 	nonExistingId,
 	journalsInDb,
 	usersInDb
