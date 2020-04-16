@@ -64,7 +64,7 @@ describe('when there is initially some journals saved', () => {
 			expect(response.body).toEqual(journalToView)
 		})
 
-		test('fails with statuscode 404 if note does not exist', async () => {
+		test('fails with statuscode 404 if journal does not exist', async () => {
 			const users = await helper.usersInDb()
 			const validNonexistingId = await helper.nonExistingId(users[0])
 
@@ -82,7 +82,7 @@ describe('when there is initially some journals saved', () => {
 		})
 	})
 
-	describe('addition of a new note', () => {
+	describe('addition of a new journal', () => {
 		test('succeeds with valid data', async () => {
 			const newJournal = {
 				date: '2020-01-01',
@@ -158,7 +158,93 @@ describe('when there is initially some journals saved', () => {
 		})
 	})
 
-	describe('deletion of a note', () => {
+	describe('update a journal', () => {
+		test('succeeds with status code 200 if data is valid', async () => {
+			const journalsAtStart = await helper.journalsInDb()
+
+			const updatedJournal = {
+				...journalsAtStart[0].toJSON(),
+				date: '2021-01-01',
+				reflection: 'update a new journal test',
+			}
+
+			// Login to get token
+			const response = await api.post('/api/login').send({
+				username: (await helper.initializeUser()).username,
+				password: (await helper.initializeUser()).password
+			})
+
+			await api
+				.put(`/api/journals/${updatedJournal.id}`)
+				.send(updatedJournal)
+				.set({ Authorization: 'bearer ' + response.body.token })
+				.expect(200)
+				.expect('Content-Type', /application\/json/)
+
+			const journalsAtEnd = await helper.journalsInDb()
+			expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
+
+			const dates = journalsAtEnd.map(r => r.date)
+			expect(dates).toContain('2021-01-01')
+
+			const reflections = journalsAtEnd.map(r => r.reflection)
+			expect(reflections).toContain('update a new journal test')
+		})
+
+		test('fails with status code 400 if data is invalid', async () => {
+			const journalsAtStart = await helper.journalsInDb()
+
+			const updatedJournal = {
+				...journalsAtStart[0].toJSON(),
+				date: '',
+				reflection: 'update a new journal test',
+			}
+
+			// Login to get token
+			const response = await api.post('/api/login').send({
+				username: (await helper.initializeUser()).username,
+				password: (await helper.initializeUser()).password
+			})
+
+			await api
+				.put(`/api/journals/${updatedJournal.id}`)
+				.send(updatedJournal)
+				.set({ Authorization: 'bearer ' + response.body.token })
+				.expect(400)
+
+			const journalsAtEnd = await helper.journalsInDb()
+			expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
+
+			const reflections = journalsAtEnd.map(r => r.reflection)
+			expect(reflections).not.toContain('update a new journal test')
+		})
+
+		test('fails with status code 401 if token is invalid', async () => {
+			const journalsAtStart = await helper.journalsInDb()
+
+			const updatedJournal = {
+				...journalsAtStart[0].toJSON(),
+				date: '2021-01-01',
+				reflection: 'update a new journal test',
+			}
+
+			await api
+				.put(`/api/journals/${updatedJournal.id}`)
+				.send(updatedJournal)
+				.expect(401)
+
+			const journalsAtEnd = await helper.journalsInDb()
+			expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
+
+			const dates = journalsAtEnd.map(r => r.date)
+			expect(dates).not.toContain('2021-01-01')
+
+			const reflections = journalsAtEnd.map(r => r.reflection)
+			expect(reflections).not.toContain('update a new journal test')
+		})
+	})
+
+	describe('deletion of a journal', () => {
 		test('succeeds with status code 204 if id is valid', async () => {
 			const journalsAtStart = await helper.journalsInDb()
 			const journalToDelete = journalsAtStart[0]
