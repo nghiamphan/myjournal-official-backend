@@ -4,6 +4,7 @@ const User = require('../models/user')
 
 journalsRouter.get('/', async (request, response) => {
 	const journals = await Journal.find({})
+		.populate('user_id', { username: 1, name: 1 })
 	response.json(journals)
 })
 
