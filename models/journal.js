@@ -11,7 +11,11 @@ const journalSchema = new mongoose.Schema({
 		required: true
 	},
 	book_summaries: [],
-	words_of_today: []
+	words_of_today: [],
+	user: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'User'
+	}
 })
 
 journalSchema.set('toJSON', {
