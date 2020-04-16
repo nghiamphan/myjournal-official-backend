@@ -172,6 +172,24 @@ describe('when there is initially one user at db', () => {
 		const usernames = usersAtEnd.map(u => u.username)
 		expect(usernames).toContain(newUser.username)
 	})
+
+	test('creation fails with a duplicated username', async () => {
+		const usersAtStart = await helper.usersInDb()
+
+		const newUser = {
+			username: 'root',
+			name: 'Root',
+			password: 'root',
+		}
+
+		await api
+			.post('/api/users')
+			.send(newUser)
+			.expect(400)
+
+		const usersAtEnd = await helper.usersInDb()
+		expect(usersAtEnd).toHaveLength(usersAtStart.length)
+	})
 })
 
 afterAll(() => {
