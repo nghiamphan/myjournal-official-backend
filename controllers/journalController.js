@@ -1,5 +1,6 @@
 const journalsRouter = require('express').Router()
 const Journal = require('../models/journal')
+const User = require('../models/user')
 
 journalsRouter.get('/', async (request, response) => {
 	const journals = await Journal.find({})
@@ -18,15 +19,21 @@ journalsRouter.get('/:id', async (request, response) => {
 journalsRouter.post('/', async (request, response) => {
 	const body = request.body
 
+	const user = await User.findById(body.userId)
+
 	const journal = new Journal({
 		date: body.date,
 		todos: body.todos,
 		reflection: body.reflection,
 		book_summaries: body.book_summaries,
-		words_of_today: body.words_of_today
+		words_of_today: body.words_of_today,
+		user: user._id
 	})
 
 	const savedJournal = await journal.save()
+	user.journals = user.journals.concat(savedJournal._id)
+	await user.save()
+
 	response.json(savedJournal)
 })
 
