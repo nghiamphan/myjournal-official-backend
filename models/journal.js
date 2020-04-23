@@ -1,11 +1,12 @@
 const mongoose = require('mongoose')
+const todoSchema = require('./todo')
 
 const journalSchema = new mongoose.Schema({
 	date: {
 		type: String,
 		required: true
 	},
-	todos: [],
+	todos: [todoSchema],
 	reflection: {
 		type: String,
 		required: true
