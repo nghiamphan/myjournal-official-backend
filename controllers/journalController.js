@@ -4,14 +4,30 @@ const Journal = require('../models/journal')
 const User = require('../models/user')
 
 journalsRouter.get('/', async (request, response) => {
-	const journals = await Journal.find({})
+	const token = request.token
+
+	const decodedToken = jwt.verify(token, process.env.SECRET)
+	if (!token || !decodedToken.id) {
+		return response.status(401).json({ error: 'token missing or invalid' })
+	}
+	const user = await User.findById(decodedToken.id)
+
+	const journals = await Journal.find({ user_id: user._id })
 		.populate('user_id', { username: 1, name: 1 })
 	response.json(journals)
 })
 
 journalsRouter.get('/:id', async (request, response) => {
+	const token = request.token
+
+	const decodedToken = jwt.verify(token, process.env.SECRET)
+	if (!token || !decodedToken.id) {
+		return response.status(401).json({ error: 'token missing or invalid' })
+	}
+	const user = await User.findById(decodedToken.id)
+
 	const journal = await Journal.findById(request.params.id)
-	if (journal) {
+	if (journal && journal.user_id.toString() === user._id.toString()) {
 		response.json(journal)
 	} else {
 		response.status(404).end()
