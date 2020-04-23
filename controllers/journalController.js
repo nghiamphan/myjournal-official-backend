@@ -25,6 +25,12 @@ journalsRouter.post('/', async (request, response) => {
 	const body = request.body
 	const user = await User.findById(request.userId)
 
+	const journals = await Journal.find({ user_id: user._id })
+	const duplicatedDate = journals.find(journal => journal.date === body.date)
+	if (duplicatedDate) {
+		return response.status(409).json({ error: 'cannot post a journal with a duplicated date' })
+	}
+
 	const journal = new Journal({
 		date: body.date,
 		todos: body.todos,
@@ -48,6 +54,12 @@ journalsRouter.put('/:id', async (request, response) => {
 	const journalToUpdate = await Journal.findById(request.params.id)
 	if (journalToUpdate.user_id.toString() !== user._id.toString()) {
 		return response.status(401).json({ error: 'cannot update a journal created by other user' })
+	}
+
+	const journals = await Journal.find({ user_id: user._id })
+	const duplicatedDate = journals.find(journal => journal.date === body.date && journal._id.toString() !== request.params.id)
+	if (duplicatedDate) {
+		return response.status(409).json({ error: 'cannot update a journal with a duplicated date' })
 	}
 
 	const journal = {
