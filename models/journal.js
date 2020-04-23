@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const bookSummarySchema = require('./bookSummary')
+const todayWordSchema = require('./todayWord')
 const todoSchema = require('./todo')
 
 const journalSchema = new mongoose.Schema({
@@ -13,7 +14,7 @@ const journalSchema = new mongoose.Schema({
 		required: true
 	},
 	book_summaries: [bookSummarySchema],
-	words_of_today: [],
+	words_of_today: [todayWordSchema],
 	user_id: {
 		type: mongoose.Schema.Types.ObjectId,
 		required: true,
