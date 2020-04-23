@@ -1,16 +1,9 @@
 const journalsRouter = require('express').Router()
-const jwt = require('jsonwebtoken')
 const Journal = require('../models/journal')
 const User = require('../models/user')
 
 journalsRouter.get('/', async (request, response) => {
-	const token = request.token
-
-	const decodedToken = jwt.verify(token, process.env.SECRET)
-	if (!token || !decodedToken.id) {
-		return response.status(401).json({ error: 'token missing or invalid' })
-	}
-	const user = await User.findById(decodedToken.id)
+	const user = await User.findById(request.userId)
 
 	const journals = await Journal.find({ user_id: user._id })
 		.populate('user_id', { username: 1, name: 1 })
@@ -18,13 +11,7 @@ journalsRouter.get('/', async (request, response) => {
 })
 
 journalsRouter.get('/:id', async (request, response) => {
-	const token = request.token
-
-	const decodedToken = jwt.verify(token, process.env.SECRET)
-	if (!token || !decodedToken.id) {
-		return response.status(401).json({ error: 'token missing or invalid' })
-	}
-	const user = await User.findById(decodedToken.id)
+	const user = await User.findById(request.userId)
 
 	const journal = await Journal.findById(request.params.id)
 	if (journal && journal.user_id.toString() === user._id.toString()) {
@@ -36,13 +23,7 @@ journalsRouter.get('/:id', async (request, response) => {
 
 journalsRouter.post('/', async (request, response) => {
 	const body = request.body
-	const token = request.token
-
-	const decodedToken = jwt.verify(token, process.env.SECRET)
-	if (!token || !decodedToken.id) {
-		return response.status(401).json({ error: 'token missing or invalid' })
-	}
-	const user = await User.findById(decodedToken.id)
+	const user = await User.findById(request.userId)
 
 	const journal = new Journal({
 		date: body.date,
@@ -62,13 +43,8 @@ journalsRouter.post('/', async (request, response) => {
 
 journalsRouter.put('/:id', async (request, response) => {
 	const body = request.body
-	const token = request.token
+	const user = await User.findById(request.userId)
 
-	const decodedToken = jwt.verify(token, process.env.SECRET)
-	if (!token || !decodedToken.id) {
-		return response.status(401).json({ error: 'token missing or invalid' })
-	}
-	const user = await User.findById(decodedToken.id)
 	const journalToUpdate = await Journal.findById(request.params.id)
 	if (journalToUpdate.user_id.toString() !== user._id.toString()) {
 		return response.status(401).json({ error: 'cannot update a journal created by other user' })
@@ -88,13 +64,8 @@ journalsRouter.put('/:id', async (request, response) => {
 })
 
 journalsRouter.delete('/:id', async (request, response) => {
-	const token = request.token
+	const user = await User.findById(request.userId)
 
-	const decodedToken = jwt.verify(token, process.env.SECRET)
-	if (!token || !decodedToken.id) {
-		return response.status(401).json({ error: 'token missing or invalid' })
-	}
-	const user = await User.findById(decodedToken.id)
 	const journalToDelete = await Journal.findById(request.params.id)
 	if (journalToDelete.user_id.toString() !== user._id.toString()) {
 		return response.status(401).json({ error: 'cannot delete a journal created by other user' })
