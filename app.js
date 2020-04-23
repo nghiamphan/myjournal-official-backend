@@ -9,6 +9,7 @@ const usersRouter = require('./controllers/userController')
 const middleware = require('./utils/middleware')
 const logger = require('./utils/logger')
 const mongoose = require('mongoose')
+const path = require('path')
 
 logger.info('connecting to', config.MONGODB_URI)
 
@@ -35,6 +36,15 @@ app.use(middleware.requestLogger)
 app.use('/api/login', loginRouter)
 app.use('/api/journals', journalsRouter)
 app.use('/api/users', usersRouter)
+
+const frontendRoutes = [
+	'/login',
+	'/calendar',
+	'/journals'
+]
+app.get(frontendRoutes, (request , response) => {
+	response.sendFile(path.join(__dirname + '/build/index.html'))
+})
 
 app.use(middleware.unknownEndpoint)
 app.use(middleware.errorHandler)
