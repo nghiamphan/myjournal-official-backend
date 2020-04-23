@@ -17,6 +17,7 @@ const tokenValidation = (request, response, next) => {
 	if (request.path.includes('/api/journals'))  {
 		const decodedToken = jwt.verify(token, process.env.SECRET)
 		if (!token || !decodedToken.id) {
+			// Not really necessary here, since if the token is invalid during jwt.verify(token), the program will move straight to errorHandler middleware
 			return response.status(401).json({ error: 'token missing or invalid' })
 		} else {
 			request.userId = decodedToken.id
@@ -38,7 +39,7 @@ const unknownEndpoint = (request, response) => {
 }
 
 const errorHandler = (error, request, response, next) => {
-	logger.error(error.message)
+	logger.error('error handler middleware: ', error.message)
 
 	if (error.name === 'CastError') {
 		// For some reason, error.kind === undefined?
