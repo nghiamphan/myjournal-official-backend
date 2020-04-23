@@ -56,7 +56,7 @@ const initialJournals = [
 	}
 ]
 
-const initializeUser = async () => {
+const firstUser = async () => {
 	const passwordHash = await bcrypt.hash('root', 10)
 	return {
 		username: 'root',
@@ -101,11 +101,29 @@ const usersInDb = async () => {
 	return users
 }
 
+const setupInitialDatabase = async () => {
+	// Set up initial user database
+	await User.deleteMany({})
+
+	const user = new User(await firstUser())
+
+	const savedUser = await user.save()
+
+	// Set up initial journal database, all journals created by first user
+	await Journal.deleteMany({})
+
+	const journalObjects = initialJournals
+		.map(journal => new Journal({ ...journal, user_id: savedUser._id }))
+	const promiseArray = journalObjects.map(journal => journal.save())
+	await Promise.all(promiseArray)
+}
+
 module.exports = {
 	initialJournals,
-	initializeUser,
+	firstUser,
 	secondUser,
 	nonExistingId,
 	journalsInDb,
-	usersInDb
+	usersInDb,
+	setupInitialDatabase
 }
