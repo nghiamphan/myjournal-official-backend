@@ -23,7 +23,7 @@ const initialJournals = [
 				id: 1,
 				title: 'Catch-22',
 				chapter: 'The Texan',
-				summary: 'This chapter is very interesting'
+				content: 'This chapter is very interesting'
 			}
 		],
 		words_of_today: [
@@ -49,7 +49,7 @@ const initialJournals = [
 				id: 1,
 				title: 'Selfish Gene',
 				chapter: '12',
-				summary: 'This chapter is very insightful.'
+				content: 'This chapter is very insightful.'
 			}
 		],
 		words_of_today: []
@@ -61,6 +61,16 @@ const initializeUser = async () => {
 	return {
 		username: 'root',
 		name: 'Root',
+		password: 'root', // add password here for testing purpose only
+		passwordHash
+	}
+}
+
+const secondUser = async () => {
+	const passwordHash = await bcrypt.hash('root', 10)
+	return {
+		username: 'secondUser',
+		name: 'Second User',
 		password: 'root', // add password here for testing purpose only
 		passwordHash
 	}
@@ -94,6 +104,7 @@ const usersInDb = async () => {
 module.exports = {
 	initialJournals,
 	initializeUser,
+	secondUser,
 	nonExistingId,
 	journalsInDb,
 	usersInDb

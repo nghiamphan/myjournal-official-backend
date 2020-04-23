@@ -1,4 +1,3 @@
-const bcrypt = require('bcrypt')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const helper = require('./test_helper')
@@ -242,6 +241,42 @@ describe('when there is initially some journals saved', () => {
 			const reflections = journalsAtEnd.map(r => r.reflection)
 			expect(reflections).not.toContain('update a new journal test')
 		})
+
+		test('fails with status code 401 if a journal is updated by a user who did not create it', async () => {
+			const journalsAtStart = await helper.journalsInDb()
+
+			const updatedJournal = {
+				...journalsAtStart[0].toJSON(),
+				date: '2021-01-01',
+				reflection: 'update a new journal test',
+			}
+
+			// Login with a user who did not create the journal
+			const secondUser = new User(await helper.secondUser())
+			await secondUser.save()
+
+			const response = await api.post('/api/login').send({
+				username: secondUser.username,
+				password: (await helper.secondUser()).password
+			})
+
+			const journalResponse = await api
+				.put(`/api/journals/${updatedJournal.id}`)
+				.send(updatedJournal)
+				.set({ Authorization: 'bearer ' + response.body.token })
+				.expect(401)
+
+			expect(journalResponse.text).toEqual('{"error":"cannot update a journal created by other user"}')
+
+			const journalsAtEnd = await helper.journalsInDb()
+			expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
+
+			const dates = journalsAtEnd.map(r => r.date)
+			expect(dates).not.toContain('2021-01-01')
+
+			const reflections = journalsAtEnd.map(r => r.reflection)
+			expect(reflections).not.toContain('update a new journal test')
+		})
 	})
 
 	describe('deletion of a journal', () => {
@@ -277,6 +312,45 @@ describe('when there is initially some journals saved', () => {
 			await api
 				.delete(`/api/journals/${journalToDelete.id}`)
 				.expect(401)
+
+			const journalAtEnd = await helper.journalsInDb()
+			expect(journalAtEnd).toHaveLength(helper.initialJournals.length)
+
+			const dates = journalAtEnd.map(r => r.date)
+			expect(dates).toContain('2020-03-23')
+
+			const reflections = journalAtEnd.map(r => r.reflection)
+			expect(reflections).toContain('Today is good.')
+		})
+
+		test('fails with status code 401 if if a journal is deleted by a user who did not create it', async () => {
+			const journalsAtStart = await helper.journalsInDb()
+			const journalToDelete = journalsAtStart[0]
+
+			// Login with a user who did not create the journal
+			const secondUser = new User(await helper.secondUser())
+			await secondUser.save()
+
+			const response = await api.post('/api/login').send({
+				username: secondUser.username,
+				password: (await helper.secondUser()).password
+			})
+
+			const journalResponse = await api
+				.delete(`/api/journals/${journalToDelete.id}`)
+				.set({ Authorization: 'bearer ' + response.body.token })
+				.expect(401)
+
+			expect(journalResponse.text).toEqual('{"error":"cannot delete a journal created by other user"}')
+
+			const journalAtEnd = await helper.journalsInDb()
+			expect(journalAtEnd).toHaveLength(helper.initialJournals.length)
+
+			const dates = journalAtEnd.map(r => r.date)
+			expect(dates).toContain('2020-03-23')
+
+			const reflections = journalAtEnd.map(r => r.reflection)
+			expect(reflections).toContain('Today is good.')
 		})
 	})
 })
@@ -285,12 +359,7 @@ describe('when there is initially one user at db', () => {
 	beforeEach(async () => {
 		await User.deleteMany({})
 
-		const passwordHash = await bcrypt.hash('root', 10)
-		const user = new User({
-			username: 'root',
-			name: 'Root',
-			passwordHash
-		})
+		const user = new User(await helper.initializeUser())
 
 		await user.save()
 	})
