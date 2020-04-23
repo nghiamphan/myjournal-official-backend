@@ -53,6 +53,10 @@ journalsRouter.put('/:id', async (request, response) => {
 		return response.status(401).json({ error: 'token missing or invalid' })
 	}
 	const user = await User.findById(decodedToken.id)
+	const journalToUpdate = await Journal.findById(request.params.id)
+	if (journalToUpdate.user_id.toString() !== user._id.toString()) {
+		return response.status(401).json({ error: 'cannot update a journal created by other user' })
+	}
 
 	const journal = {
 		date: body.date,
@@ -75,6 +79,10 @@ journalsRouter.delete('/:id', async (request, response) => {
 		return response.status(401).json({ error: 'token missing or invalid' })
 	}
 	const user = await User.findById(decodedToken.id)
+	const journalToDelete = await Journal.findById(request.params.id)
+	if (journalToDelete.user_id.toString() !== user._id.toString()) {
+		return response.status(401).json({ error: 'cannot delete a journal created by other user' })
+	}
 
 	await Journal.findByIdAndRemove(request.params.id)
 	user.journals = user.journals.filter(journal => journal.id !== request.params.id)
