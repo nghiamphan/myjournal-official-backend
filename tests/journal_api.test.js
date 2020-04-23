@@ -53,8 +53,8 @@ describe('when there are initially some journals saved', () => {
 
 				const response = await api
 					.get(`/api/journals/${journalToView.id}`)
-					.expect(200)
 					.set({ Authorization: 'bearer ' + firstUserLoginResponse.body.token })
+					.expect(200)
 					.expect('Content-Type', /application\/json/)
 
 				journalToView = { ...journalToView.toJSON(), user_id: journalToView.user_id.toString() }
@@ -200,74 +200,87 @@ describe('when there are initially some journals saved', () => {
 	})
 
 	describe('if the authorization token is missing', () => {
-		describe('addition of a new journal', () => {
-			test('fails with status code 401', async () => {
-				const newJournal = {
-					date: '2020-01-01',
-					todos: [],
-					reflection: 'add a new journal test',
-					book_summaries: [],
-					words_of_today: []
-				}
-
-				await api
-					.post('/api/journals')
-					.send(newJournal)
-					.expect(401)
-
-				const journalsAtEnd = await helper.journalsInDb()
-				expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
-			})
+		test('getting journals fails with statuscode 401', async () => {
+			await api
+				.get('/api/journals')
+				.expect(401)
 		})
 
-		describe('update a journal', () => {
-			test('fails with status code 401', async () => {
-				const journalsAtStart = await helper.journalsInDb()
+		test('getting a specific journal fails with statuscode 401', async () => {
+			const journalsAtStart = await helper.journalsInDb()
 
-				const updatedJournal = {
-					...journalsAtStart[0].toJSON(),
-					date: '2021-01-01',
-					reflection: 'update a new journal test',
-				}
+			let journalToView = journalsAtStart[0]
 
-				await api
-					.put(`/api/journals/${updatedJournal.id}`)
-					.send(updatedJournal)
-					.expect(401)
-
-				const journalsAtEnd = await helper.journalsInDb()
-				expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
-
-				const dates = journalsAtEnd.map(r => r.date)
-				expect(dates).not.toContain('2021-01-01')
-
-				const reflections = journalsAtEnd.map(r => r.reflection)
-				expect(reflections).not.toContain('update a new journal test')
-			})
+			await api
+				.get(`/api/journals/${journalToView.id}`)
+				.expect(401)
 		})
 
-		describe('deletion of a journal', () => {
-			test('fails with status code 401', async () => {
-				const journalsAtStart = await helper.journalsInDb()
-				const journalToDelete = journalsAtStart[0]
+		test('adding a journal fails with status code 401', async () => {
+			const newJournal = {
+				date: '2020-01-01',
+				todos: [],
+				reflection: 'add a new journal test',
+				book_summaries: [],
+				words_of_today: []
+			}
 
-				await api
-					.delete(`/api/journals/${journalToDelete.id}`)
-					.expect(401)
+			await api
+				.post('/api/journals')
+				.send(newJournal)
+				.expect(401)
 
-				const journalAtEnd = await helper.journalsInDb()
-				expect(journalAtEnd).toHaveLength(helper.initialJournals.length)
-
-				const dates = journalAtEnd.map(r => r.date)
-				expect(dates).toContain('2020-03-23')
-
-				const reflections = journalAtEnd.map(r => r.reflection)
-				expect(reflections).toContain('Today is good.')
-			})
+			const journalsAtEnd = await helper.journalsInDb()
+			expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
 		})
+
+
+		test('updating a journal fails with status code 401', async () => {
+			const journalsAtStart = await helper.journalsInDb()
+
+			const updatedJournal = {
+				...journalsAtStart[0].toJSON(),
+				date: '2021-01-01',
+				reflection: 'update a new journal test',
+			}
+
+			await api
+				.put(`/api/journals/${updatedJournal.id}`)
+				.send(updatedJournal)
+				.expect(401)
+
+			const journalsAtEnd = await helper.journalsInDb()
+			expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
+
+			const dates = journalsAtEnd.map(r => r.date)
+			expect(dates).not.toContain('2021-01-01')
+
+			const reflections = journalsAtEnd.map(r => r.reflection)
+			expect(reflections).not.toContain('update a new journal test')
+		})
+
+
+		test('deleting a journal fails with status code 401', async () => {
+			const journalsAtStart = await helper.journalsInDb()
+			const journalToDelete = journalsAtStart[0]
+
+			await api
+				.delete(`/api/journals/${journalToDelete.id}`)
+				.expect(401)
+
+			const journalAtEnd = await helper.journalsInDb()
+			expect(journalAtEnd).toHaveLength(helper.initialJournals.length)
+
+			const dates = journalAtEnd.map(r => r.date)
+			expect(dates).toContain('2020-03-23')
+
+			const reflections = journalAtEnd.map(r => r.reflection)
+			expect(reflections).toContain('Today is good.')
+		})
+
 	})
 
-	describe('if the authorization token is incompatible (user 2 logged in)', () => {
+	describe('if the authorization token is incompatible (user 2 has posted no journals)', () => {
 		beforeEach(async () => {
 			// Login with a user who did not create the journal
 			const secondUser = new User(await helper.secondUser())
@@ -279,56 +292,73 @@ describe('when there are initially some journals saved', () => {
 			})
 		})
 
-		describe('update a journal', () => {
-			test('fails with status code 401 if a journal is updated by a user who did not create it', async () => {
-				const journalsAtStart = await helper.journalsInDb()
+		test('getting journals returns an empty array', async () => {
+			const response = await api
+				.get('/api/journals')
+				.set({ Authorization: 'bearer ' + secondUserLoginResponse.body.token })
+				.expect(200)
 
-				const updatedJournal = {
-					...journalsAtStart[0].toJSON(),
-					date: '2021-01-01',
-					reflection: 'update a new journal test',
-				}
-
-				const journalResponse = await api
-					.put(`/api/journals/${updatedJournal.id}`)
-					.send(updatedJournal)
-					.set({ Authorization: 'bearer ' + secondUserLoginResponse.body.token })
-					.expect(401)
-
-				expect(journalResponse.text).toEqual('{"error":"cannot update a journal created by other user"}')
-
-				const journalsAtEnd = await helper.journalsInDb()
-				expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
-
-				const dates = journalsAtEnd.map(r => r.date)
-				expect(dates).not.toContain('2021-01-01')
-
-				const reflections = journalsAtEnd.map(r => r.reflection)
-				expect(reflections).not.toContain('update a new journal test')
-			})
+			expect(response.body).toHaveLength(0)
 		})
 
-		describe('deletion of a journal', () => {
-			test('fails with status code 401 if if a journal is deleted by a user who did not create it', async () => {
-				const journalsAtStart = await helper.journalsInDb()
-				const journalToDelete = journalsAtStart[0]
+		test('getting a specific journal fails with statuscode 404', async () => {
+			const journalsAtStart = await helper.journalsInDb()
 
-				const journalResponse = await api
-					.delete(`/api/journals/${journalToDelete.id}`)
-					.set({ Authorization: 'bearer ' + secondUserLoginResponse.body.token })
-					.expect(401)
+			let journalToView = journalsAtStart[0]
 
-				expect(journalResponse.text).toEqual('{"error":"cannot delete a journal created by other user"}')
+			await api
+				.get(`/api/journals/${journalToView.id}`)
+				.set({ Authorization: 'bearer ' + secondUserLoginResponse.body.token })
+				.expect(404)
+		})
 
-				const journalAtEnd = await helper.journalsInDb()
-				expect(journalAtEnd).toHaveLength(helper.initialJournals.length)
+		test('updating a journal fails with status code 401 if the journal is updated by a user who did not create it', async () => {
+			const journalsAtStart = await helper.journalsInDb()
 
-				const dates = journalAtEnd.map(r => r.date)
-				expect(dates).toContain('2020-03-23')
+			const updatedJournal = {
+				...journalsAtStart[0].toJSON(),
+				date: '2021-01-01',
+				reflection: 'update a new journal test',
+			}
 
-				const reflections = journalAtEnd.map(r => r.reflection)
-				expect(reflections).toContain('Today is good.')
-			})
+			const journalResponse = await api
+				.put(`/api/journals/${updatedJournal.id}`)
+				.send(updatedJournal)
+				.set({ Authorization: 'bearer ' + secondUserLoginResponse.body.token })
+				.expect(401)
+
+			expect(journalResponse.text).toEqual('{"error":"cannot update a journal created by other user"}')
+
+			const journalsAtEnd = await helper.journalsInDb()
+			expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
+
+			const dates = journalsAtEnd.map(r => r.date)
+			expect(dates).not.toContain('2021-01-01')
+
+			const reflections = journalsAtEnd.map(r => r.reflection)
+			expect(reflections).not.toContain('update a new journal test')
+		})
+
+
+		test('deleting a journal fails with status code 401 if the journal is deleted by a user who did not create it', async () => {
+			const journalsAtStart = await helper.journalsInDb()
+			const journalToDelete = journalsAtStart[0]
+
+			const journalResponse = await api
+				.delete(`/api/journals/${journalToDelete.id}`)
+				.set({ Authorization: 'bearer ' + secondUserLoginResponse.body.token })
+				.expect(401)
+
+			expect(journalResponse.text).toEqual('{"error":"cannot delete a journal created by other user"}')
+
+			const journalAtEnd = await helper.journalsInDb()
+			expect(journalAtEnd).toHaveLength(helper.initialJournals.length)
+
+			const dates = journalAtEnd.map(r => r.date)
+			expect(dates).toContain('2020-03-23')
+
+			const reflections = journalAtEnd.map(r => r.reflection)
+			expect(reflections).toContain('Today is good.')
 		})
 	})
 })
