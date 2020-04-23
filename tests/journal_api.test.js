@@ -19,7 +19,7 @@ beforeEach(async () => {
 
 describe('when there are initially some journals saved', () => {
 	describe('if the authorization token is valid (user 1 logged in)', () => {
-		test('journals are returned as json with statuscode 200', async () => {
+		test('journals are returned as json with status code 200', async () => {
 			await api
 				.get('/api/journals')
 				.set({ Authorization: 'bearer ' + firstUserLoginResponse.body.token })
@@ -46,7 +46,7 @@ describe('when there are initially some journals saved', () => {
 		})
 
 		describe('viewing a specific journal', () => {
-			test('succeeds with statuscode 200 if id is valid', async () => {
+			test('succeeds with status code 200 if id is valid', async () => {
 				const journalsAtStart = await helper.journalsInDb()
 
 				let journalToView = journalsAtStart[0]
@@ -61,7 +61,7 @@ describe('when there are initially some journals saved', () => {
 				expect(response.body).toEqual(journalToView)
 			})
 
-			test('fails with statuscode 404 if journal does not exist', async () => {
+			test('fails with status code 404 if journal does not exist', async () => {
 				const users = await helper.usersInDb()
 				const validNonexistingId = await helper.nonExistingId(users[0])
 
@@ -71,7 +71,7 @@ describe('when there are initially some journals saved', () => {
 					.expect(404)
 			})
 
-			test('fails with statuscode 400 id is in invalid format', async () => {
+			test('fails with status code 400 id is in invalid format', async () => {
 				const invalidId = '5a3d5da59070081a82a3445'
 
 				await api
@@ -121,6 +121,27 @@ describe('when there are initially some journals saved', () => {
 					.send(newJournal)
 					.set({ Authorization: 'bearer ' + firstUserLoginResponse.body.token })
 					.expect(400)
+
+				const journalsAtEnd = await helper.journalsInDb()
+				expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
+			})
+
+			test('fails with status code 409 if date is invalid', async () => {
+				const newJournal = {
+					date: helper.initialJournals[0].date,
+					todos: [],
+					reflection: 'add a new journal test',
+					book_summaries: [],
+					words_of_today: []
+				}
+
+				const response = await api
+					.post('/api/journals')
+					.send(newJournal)
+					.set({ Authorization: 'bearer ' + firstUserLoginResponse.body.token })
+					.expect(409)
+
+				expect(response.text).toEqual('{"error":"cannot post a journal with a duplicated date"}')
 
 				const journalsAtEnd = await helper.journalsInDb()
 				expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
@@ -175,6 +196,30 @@ describe('when there are initially some journals saved', () => {
 				const reflections = journalsAtEnd.map(r => r.reflection)
 				expect(reflections).not.toContain('update a new journal test')
 			})
+
+			test('fails with status code 409 if data is valid', async () => {
+				const journalsAtStart = await helper.journalsInDb()
+
+				const updatedJournal = {
+					...journalsAtStart[0].toJSON(),
+					date: journalsAtStart[1].date,
+					reflection: 'update a new journal test',
+				}
+
+				const response = await api
+					.put(`/api/journals/${updatedJournal.id}`)
+					.send(updatedJournal)
+					.set({ Authorization: 'bearer ' + firstUserLoginResponse.body.token })
+					.expect(409)
+
+				expect(response.text).toEqual('{"error":"cannot update a journal with a duplicated date"}')
+
+				const journalsAtEnd = await helper.journalsInDb()
+				expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
+
+				const reflections = journalsAtEnd.map(r => r.reflection)
+				expect(reflections).not.toContain('update a new journal test')
+			})
 		})
 
 		describe('deletion of a journal', () => {
@@ -200,13 +245,13 @@ describe('when there are initially some journals saved', () => {
 	})
 
 	describe('if the authorization token is missing', () => {
-		test('getting journals fails with statuscode 401', async () => {
+		test('getting journals fails with status code 401', async () => {
 			await api
 				.get('/api/journals')
 				.expect(401)
 		})
 
-		test('getting a specific journal fails with statuscode 401', async () => {
+		test('getting a specific journal fails with status code 401', async () => {
 			const journalsAtStart = await helper.journalsInDb()
 
 			let journalToView = journalsAtStart[0]
@@ -301,7 +346,7 @@ describe('when there are initially some journals saved', () => {
 			expect(response.body).toHaveLength(0)
 		})
 
-		test('getting a specific journal fails with statuscode 404', async () => {
+		test('getting a specific journal fails with status code 404', async () => {
 			const journalsAtStart = await helper.journalsInDb()
 
 			let journalToView = journalsAtStart[0]
