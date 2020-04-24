@@ -36,6 +36,7 @@ journalsRouter.post('/', async (request, response) => {
 		todos: body.todos,
 		reflection: body.reflection,
 		book_summaries: body.book_summaries,
+		quotes: body.quotes,
 		words_of_today: body.words_of_today,
 		user_id: user._id
 	})
@@ -67,6 +68,7 @@ journalsRouter.put('/:id', async (request, response) => {
 		todos: body.todos,
 		reflection: body.reflection,
 		book_summaries: body.book_summaries,
+		quotes: body.quotes,
 		words_of_today: body.words_of_today,
 		user_id: user._id
 	}
