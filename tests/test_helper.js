@@ -26,6 +26,13 @@ const initialJournals = [
 				content: 'This chapter is very interesting'
 			}
 		],
+		quotes: [
+			{
+				content: 'You don’t want to live on this gay planet but you’re betting against the only person who can bring you to mars.',
+				source: 'https://www.reddit.com/r/wallstreetbets/comments/g16ekl/what_the_fuck/fndom6q/',
+				comment: 'Best quote I come upon on Reddit today.'
+			}
+		],
 		words_of_today: [
 			{
 				id: 1,
@@ -52,6 +59,7 @@ const initialJournals = [
 				content: 'This chapter is very insightful.'
 			}
 		],
+		quotes: [],
 		words_of_today: []
 	}
 ]
