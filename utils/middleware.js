@@ -51,6 +51,14 @@ const errorHandler = (error, request, response, next) => {
 		return response.status(401).json({
 			error: 'invalid token'
 		})
+	} else if (error.message.includes('Cannot read property \'user_id\' of null')) {
+		return response.status(401).json({
+			error: 'resource not found'
+		})
+	} else if (error.message.includes('Cannot read property \'_id\' of null')) {
+		return response.status(401).json({
+			error: 'user not found'
+		})
 	}
 	next(error)
 }
