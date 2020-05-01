@@ -5,6 +5,7 @@ const app = express()
 const cors = require('cors')
 const loginRouter = require('./controllers/loginController')
 const journalsRouter = require('./controllers/journalController')
+const monthliesRouter = require('./controllers/monthlyController')
 const usersRouter = require('./controllers/userController')
 const middleware = require('./utils/middleware')
 const logger = require('./utils/logger')
@@ -35,6 +36,7 @@ app.use(middleware.requestLogger)
 
 app.use('/api/login', loginRouter)
 app.use('/api/journals', journalsRouter)
+app.use('/api/monthlies', monthliesRouter)
 app.use('/api/users', usersRouter)
 
 const frontendRoutes = [

@@ -14,7 +14,8 @@ const tokenExtractor = (request, response, next) => {
 const tokenValidation = (request, response, next) => {
 	const token = request.token
 
-	if (request.path.includes('/api/journals'))  {
+	if (request.path.includes('/api/journals')
+	|| request.path.includes('/api/monthlies'))  {
 		const decodedToken = jwt.verify(token, process.env.SECRET)
 		if (!token || !decodedToken.id) {
 			// Not really necessary here, since if the token is invalid during jwt.verify(token), the program will move straight to errorHandler middleware
