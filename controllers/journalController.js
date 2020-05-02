@@ -34,7 +34,7 @@ journalsRouter.post('/', async (request, response) => {
 	const journal = new Journal({
 		date: body.date,
 		todos: body.todos,
-		reflection: body.reflection,
+		reflections: body.reflections,
 		book_summaries: body.book_summaries,
 		quotes: body.quotes,
 		words_of_today: body.words_of_today,
@@ -66,7 +66,7 @@ journalsRouter.put('/:id', async (request, response) => {
 	const journal = {
 		date: body.date,
 		todos: body.todos,
-		reflection: body.reflection,
+		reflections: body.reflections,
 		book_summaries: body.book_summaries,
 		quotes: body.quotes,
 		words_of_today: body.words_of_today,

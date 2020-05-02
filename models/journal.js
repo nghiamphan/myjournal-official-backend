@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const reflectionSchema=require('./reflection')
 const bookSummarySchema = require('./bookSummary')
 const quoteSchema = require('./quote')
 const todayWordSchema = require('./todayWord')
@@ -10,10 +11,7 @@ const journalSchema = new mongoose.Schema({
 		required: true
 	},
 	todos: [todoSchema],
-	reflection: {
-		type: String,
-		required: true
-	},
+	reflections: [reflectionSchema],
 	book_summaries: [bookSummarySchema],
 	quotes: [quoteSchema],
 	words_of_today: [todayWordSchema],
