@@ -2,6 +2,14 @@ const journalsRouter = require('express').Router()
 const Journal = require('../models/journal')
 const User = require('../models/user')
 
+const isEmptyJournal = (body) => (
+	(!body.todos || body.todos.length === 0)
+	&& (!body.reflections || body.reflections.length === 0)
+	&& (!body.book_summaries || body.book_summaries.length === 0)
+	&& (!body.quotes || body.quotes.length === 0)
+	&& (!body.words_of_today || body.words_of_today.length === 0)
+)
+
 journalsRouter.get('/', async (request, response) => {
 	const user = await User.findById(request.userId)
 
@@ -23,6 +31,11 @@ journalsRouter.get('/:id', async (request, response) => {
 
 journalsRouter.post('/', async (request, response) => {
 	const body = request.body
+
+	if (isEmptyJournal(body)) {
+		return response.status(409).json({ error: 'journal has no content' })
+	}
+
 	const user = await User.findById(request.userId)
 
 	const journals = await Journal.find({ user_id: user._id })
@@ -50,6 +63,11 @@ journalsRouter.post('/', async (request, response) => {
 
 journalsRouter.put('/:id', async (request, response) => {
 	const body = request.body
+
+	if (isEmptyJournal(body)) {
+		return response.status(409).json({ error: 'journal has no content' })
+	}
+
 	const user = await User.findById(request.userId)
 
 	const journalToUpdate = await Journal.findById(request.params.id)
