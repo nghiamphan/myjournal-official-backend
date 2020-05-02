@@ -17,7 +17,14 @@ const initialJournals = [
 				done: false
 			}
 		],
-		reflection: 'Today is good.',
+		reflections: [
+			{
+				content: 'Today is good.'
+			},
+			{
+				content: 'Today is great.'
+			}
+		],
 		book_summaries: [
 			{
 				id: 1,
@@ -50,7 +57,11 @@ const initialJournals = [
 				done: true
 			}
 		],
-		reflection: 'Today is fantastic.',
+		reflections: [
+			{
+				content: 'Today is fantastic.'
+			}
+		],
 		book_summaries: [
 			{
 				id: 1,

@@ -40,9 +40,6 @@ describe('when there are initially some journals saved', () => {
 
 			const dates = response.body.map(r => r.date)
 			expect(dates).toContain(helper.initialJournals[0].date)
-
-			const reflections = response.body.map(r => r.reflection)
-			expect(reflections).toContain(helper.initialJournals[0].reflection)
 		})
 
 		describe('viewing a specific journal', () => {
@@ -86,7 +83,11 @@ describe('when there are initially some journals saved', () => {
 				let newJournal = {
 					...helper.initialJournals[0],
 					date: '2020-01-01',
-					reflection: 'add a new journal test',
+					reflections: [
+						{
+							content: 'add a new journal test',
+						}
+					]
 				}
 
 				await api
@@ -101,15 +102,11 @@ describe('when there are initially some journals saved', () => {
 
 				const dates = journalsAtEnd.map(r => r.date)
 				expect(dates).toContain(newJournal.date)
-
-				const reflections = journalsAtEnd.map(r => r.reflection)
-				expect(reflections).toContain(newJournal.reflection)
 			})
 
-			test('fails with status code 400 if data is invalid', async () => {
+			test('fails with status code 400 if date is missing', async () => {
 				// eslint-disable-next-line no-unused-vars
-				const { reflection, ...newJournal } = helper.initialJournals[0]
-				newJournal.date = '2020-01-01'
+				const { date, ...newJournal } = helper.initialJournals[0]
 
 				await api
 					.post('/api/journals')
@@ -127,7 +124,11 @@ describe('when there are initially some journals saved', () => {
 			test('fails with status code 409 if date is duplicated', async () => {
 				const newJournal = {
 					...helper.initialJournals[0],
-					reflection: 'add a new journal test'
+					reflections: [
+						{
+							content: 'add a new journal test',
+						}
+					]
 				}
 
 				const response = await api
@@ -140,9 +141,31 @@ describe('when there are initially some journals saved', () => {
 
 				const journalsAtEnd = await helper.journalsInDb()
 				expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
+			})
 
-				const reflections = journalsAtEnd.map(r => r.reflection)
-				expect(reflections).not.toContain(newJournal.reflection)
+			test('fails with status code 409 if content is empty', async () => {
+				const newJournal = {
+					date: '1900-01-01',
+					todos: [],
+					reflections: [],
+					book_summaries: [],
+					quotes: [],
+					words_of_today: []
+				}
+
+				const response = await api
+					.post('/api/journals')
+					.send(newJournal)
+					.set({ Authorization: 'bearer ' + firstUserLoginResponse.body.token })
+					.expect(409)
+
+				expect(response.text).toEqual('{"error":"journal has no content"}')
+
+				const journalsAtEnd = await helper.journalsInDb()
+				expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
+
+				const dates = journalsAtEnd.map(r => r.date)
+				expect(dates).not.toContain(newJournal.date)
 			})
 		})
 
@@ -153,7 +176,11 @@ describe('when there are initially some journals saved', () => {
 				const updatedJournal = {
 					...journalsAtStart[0].toJSON(),
 					date: '2021-01-01',
-					reflection: 'update a new journal test',
+					reflections: [
+						{
+							content: 'update a new journal test',
+						}
+					]
 				}
 
 				await api
@@ -168,9 +195,6 @@ describe('when there are initially some journals saved', () => {
 
 				const dates = journalsAtEnd.map(r => r.date)
 				expect(dates).toContain(updatedJournal.date)
-
-				const reflections = journalsAtEnd.map(r => r.reflection)
-				expect(reflections).toContain(updatedJournal.reflection)
 			})
 
 			test('fails with status code 400 if data is invalid', async () => {
@@ -178,8 +202,7 @@ describe('when there are initially some journals saved', () => {
 
 				const updatedJournal = {
 					...journalsAtStart[0].toJSON(),
-					date: '',
-					reflection: 'update a new journal test',
+					date: ''
 				}
 
 				await api
@@ -190,9 +213,6 @@ describe('when there are initially some journals saved', () => {
 
 				const journalsAtEnd = await helper.journalsInDb()
 				expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
-
-				const reflections = journalsAtEnd.map(r => r.reflection)
-				expect(reflections).not.toContain(updatedJournal.reflection)
 			})
 
 			test('fails with status code 409 if date is duplicated', async () => {
@@ -201,7 +221,11 @@ describe('when there are initially some journals saved', () => {
 				const updatedJournal = {
 					...journalsAtStart[0].toJSON(),
 					date: journalsAtStart[1].date,
-					reflection: 'update a new journal test',
+					reflections: [
+						{
+							content: 'update a new journal test',
+						}
+					]
 				}
 
 				const response = await api
@@ -214,9 +238,33 @@ describe('when there are initially some journals saved', () => {
 
 				const journalsAtEnd = await helper.journalsInDb()
 				expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
+			})
 
-				const reflections = journalsAtEnd.map(r => r.reflection)
-				expect(reflections).not.toContain(updatedJournal.reflection)
+			test('fails with status code 409 if content is empty', async () => {
+				const journalsAtStart = await helper.journalsInDb()
+
+				const updatedJournal = {
+					date: '1900-01-01',
+					todos: [],
+					reflections: [],
+					book_summaries: [],
+					quotes: [],
+					words_of_today: []
+				}
+
+				const response = await api
+					.put(`/api/journals/${journalsAtStart[0]._id}`)
+					.send(updatedJournal)
+					.set({ Authorization: 'bearer ' + firstUserLoginResponse.body.token })
+					.expect(409)
+
+				expect(response.text).toEqual('{"error":"journal has no content"}')
+
+				const journalsAtEnd = await helper.journalsInDb()
+				expect(journalsAtEnd).toHaveLength(helper.initialJournals.length)
+
+				const dates = journalsAtEnd.map(r => r.date)
+				expect(dates).not.toContain(updatedJournal.date)
 			})
 		})
 
@@ -235,9 +283,6 @@ describe('when there are initially some journals saved', () => {
 
 				const dates = journalAtEnd.map(r => r.date)
 				expect(dates).not.toContain(journalToDelete.date)
-
-				const reflections = journalAtEnd.map(r => r.reflection)
-				expect(reflections).not.toContain(journalToDelete.reflection)
 			})
 		})
 	})
@@ -263,7 +308,11 @@ describe('when there are initially some journals saved', () => {
 			const newJournal = {
 				...helper.initialJournals[0],
 				date: '2020-01-01',
-				reflection: 'add a new journal test',
+				reflections: [
+					{
+						content: 'update a new journal test',
+					}
+				]
 			}
 
 			await api
@@ -276,9 +325,6 @@ describe('when there are initially some journals saved', () => {
 
 			const dates = journalsAtEnd.map(r => r.date)
 			expect(dates).not.toContain(newJournal.date)
-
-			const reflections = journalsAtEnd.map(r => r.reflection)
-			expect(reflections).not.toContain(newJournal.reflection)
 		})
 
 
@@ -288,7 +334,11 @@ describe('when there are initially some journals saved', () => {
 			const updatedJournal = {
 				...journalsAtStart[0].toJSON(),
 				date: '2021-01-01',
-				reflection: 'update a new journal test',
+				reflections: [
+					{
+						content: 'update a new journal test',
+					}
+				]
 			}
 
 			await api
@@ -301,9 +351,6 @@ describe('when there are initially some journals saved', () => {
 
 			const dates = journalsAtEnd.map(r => r.date)
 			expect(dates).not.toContain(updatedJournal.date)
-
-			const reflections = journalsAtEnd.map(r => r.reflection)
-			expect(reflections).not.toContain(updatedJournal.reflection)
 		})
 
 
@@ -364,7 +411,11 @@ describe('when there are initially some journals saved', () => {
 			const updatedJournal = {
 				...journalsAtStart[0].toJSON(),
 				date: '2021-01-01',
-				reflection: 'update a new journal test',
+				reflections: [
+					{
+						content: 'update a new journal test',
+					}
+				]
 			}
 
 			const journalResponse = await api
@@ -380,9 +431,6 @@ describe('when there are initially some journals saved', () => {
 
 			const dates = journalsAtEnd.map(r => r.date)
 			expect(dates).not.toContain(updatedJournal.date)
-
-			const reflections = journalsAtEnd.map(r => r.reflection)
-			expect(reflections).not.toContain(updatedJournal.reflection)
 		})
 
 
@@ -402,9 +450,6 @@ describe('when there are initially some journals saved', () => {
 
 			const dates = journalAtEnd.map(r => r.date)
 			expect(dates).toContain(journalToDelete.date)
-
-			const reflections = journalAtEnd.map(r => r.reflection)
-			expect(reflections).toContain(journalToDelete.reflection)
 		})
 	})
 })
