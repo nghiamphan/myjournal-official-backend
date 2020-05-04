@@ -4,7 +4,8 @@ const reflectionSchema = mongoose.Schema({
 	content: {
 		type: String,
 		required: true
-	}
+	},
+	color: String
 })
 
 reflectionSchema.set('toJSON', {
