@@ -42,7 +42,8 @@ app.use('/api/users', usersRouter)
 const frontendRoutes = [
 	'/login',
 	'/calendar',
-	'/journals'
+	'/journals',
+	'/about'
 ]
 app.get(frontendRoutes, (request , response) => {
 	response.sendFile(path.join(__dirname + '/build/index.html'))
